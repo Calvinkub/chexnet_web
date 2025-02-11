@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Assist Chest Radiology System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to AI-Assist Chest Radiology System</h1>
+    </header>
+    <main>
+        <section class="upload-section">
+            <h2>Upload X-ray Image</h2>
+            <div class="upload-container">
+                <input type="file" id="xray-input" accept="image/*">
+                <button onclick="uploadImage()">Upload Image</button>
+            </div>
+        </section>
+        <section class="result-section">
+            <h2>Diagnosis Result</h2>
+            <div id="result">Please upload an image to see results.</div>
+        </section>
+    </main>
+    <footer>
+        <p>Team I-Tech</p>
+    </footer>
+    <script>
+        function uploadImage() {
+            var input = document.getElementById('xray-input');
+            var file = input.files[0];
+            var formData = new FormData();
+            formData.append('image', file);
+        
+            fetch('http://localhost:3000/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').textContent = 'Predicted Disease: ' + data.disease;
+            })
+            .catch(error => {
+                console.error('Error uploading image:', error);
+                document.getElementById('result').textContent = 'Error: ' + error.toString();
+            });
+        }
+    </script>
+</body>
+</html>

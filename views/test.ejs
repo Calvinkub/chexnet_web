@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Assist Chest Radiology System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f4f4f4, #e0e0e0);
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0056b3, #004494);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 50%;
+            margin: auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .image-section,
+        .diagnosis-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex: 1;
+        }
+
+        .image-section:hover,
+        .diagnosis-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-preview {
+            height: 450px;
+            /* Increased height for larger display */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 450px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #0056b3;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0056b3, #004494);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #004494, #003375);
+            transform: scale(1.05);
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px 0;
+            background: #333;
+            color: white;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            width: 100%;                /* Makes the input take full width of its parent container */
+            padding: 8px;               /* Adds some padding inside the input box */
+            box-sizing: border-box;     /* Includes padding and border in the element's total width and height */
+            margin-top: 5px;            /* Adds a top margin for spacing between the label and the input */
+            ;
+        }
+        
+
+        input[type="file"]:hover {
+            background-color: #007E33;
+            transform: scale(1.05);
+            border-color: #004494;
+        }
+
+        .chatbot {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 30%;
+            height: auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chatbot-content {
+            padding: 10px;
+        }
+
+        .chatbot-content button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        .toggle-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .cropped-image {
+            width: 288px;
+            /* Increase size */
+            height: 400px;
+            object-fit: contain;
+            /* Scales without cropping */
+            background-color: black;
+            /* Fills empty space */
+        }
+
+        @media (max-width: 768px) {
+            .result-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Welcome to AI-Assist Chest Radiology System</h1>
+    </header>
+    <main>
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload X-ray Image</h2>
+            <div class="upload-container">
+                <input type="file" id="xray-input" accept="image/*" onchange="previewImage();">
+                <button onclick="uploadImage()">Upload Image</button>
+            </div>
+        </div>
+
+        <!-- Display Section -->
+        <div class="result-container">
+            <div class="image-section">
+                <h2>Image View</h2>
+                <div id="image-preview" class="image-preview"></div>
+                <div class="toggle-button">
+                    <button onclick="toggleImage()">Toggle Image</button>
+                </div>
+            </div>
+            <div class="diagnosis-section">
+                <h2>Diagnosis Result</h2>
+                <div id="result">Please upload an image to see results.</div>
+            </div>
+        </div>
+    </main>
+
+    <div class="chatbot">
+        <div class="chatbot-content">
+            <div class="form-group col-md-6">
+                <label for="confirm_password">Please name the disease:</label>
+                <input type="text" id="userInput">
+                <button onclick="handleCondition()">Submit</button>
+                <div id="response"></div>
+            </div>
+        </div>
+
+    </div>
+    <footer>
+        <p>Team I-Tech</p>
+    </footer>
+    <script>
+        const conditions = {
+            Atelectasis: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์", "ภาพถ่าย X-ray แสดงให้เห็นการหดตัวของปอดในบริเวณใด?", "มีสัญญาณของการอุดตันทางเดินหายใจในภาพหรือไม่?", "มีความผิดปกติเพิ่มเติมจาก atelectasis ในภาพถ่ายหรือไม่?"],
+                Answers: ["ควรหมั่นทำการบริหารปอดอยู่เสมอ เช่น การใช้เครื่องช่วยหายใจหรือการทำกายภาพบำบัด", "รับประทานอาหารที่สมดุลและมีสารอาหารครบถ้วน เพื่อรักษาสุขภาพร่างกายให้แข็งแรง", "ควรพบแพทย์ตามคำแนะนำหรือเมื่อมีอาการผิดปกติ", "ภาพถ่าย X-ray มักแสดงให้เห็นการหดตัวของปอดในบริเวณล่างหรือข้างหนึ่งของปอด", "อาจจะไม่เห็นอุดตันโดยตรงในภาพถ่าย แต่การหดตัวของปอดบ่งบอกถึงความผิดปกติที่อาจเกิดจากอุดตัน", ""]
+            },
+            Cardiomegaly: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์", "ความผิดปกติของขนาดหัวใจในภาพถ่ายเป็นอย่างไร?", "มีสัญญาณอื่น ๆ ของความผิดปกติของหัวใจในภาพหรือไม่?", "มีการแสดงถึงภาวะหัวใจล้มเหลวหรือภาวะอื่น ๆ ที่เกี่ยวข้องกับ cardiomegaly ในภาพถ่ายหรือไม่?"],
+                Answers: ["หลีกเลี่ยงการสูบบุหรี่และลดปริมาณเกลือในอาหาร, ควบคุมน้ำหนัก, และออกกำลังกายสม่ำเสมอ", "ควรรับประทานอาหารที่มีไขมันต่ำ รวมถึงผักและผลไม้สด", "ควรพบแพทย์ทุก 3-6 เดือน หรือตามคำแนะนำของแพทย์", "ภาพถ่าย X-ray แสดงให้เห็นหัวใจที่มีขนาดใหญ่กว่าปกติเมื่อเทียบกับกระดูกหน้าอก", "อาจมีการเปลี่ยนแปลงรูปทรงของหัวใจหรือการกระจายของเงาหัวใจที่ผิดปกติ", "อาจมีการสะสมของของเหลวในปอดหรือเยื่อหุ้มปอดซึ่งบ่งบอกถึงหัวใจล้มเหลว"]
+            },
+            Effusion: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์", "ในภาพถ่าย X-ray มีการสะสมของของเหลวในบริเวณใด?", "ของเหลวที่สะสมมีความหนาแน่นเป็นอย่างไร และมันสามารถบ่งบอกถึงสาเหตุได้หรือไม่?",
+                    "มีสัญญาณการอักเสบหรือติดเชื้ออื่นๆ ในปอดหรือเนื้อเยื่อใกล้เคียงหรือไม่?"],
+                Answers: ["หลีกเลี่ยงกิจกรรมที่ทำให้หายใจลำบาก และทำการบริหารปอด", "ดื่มน้ำมากๆ และรับประทานอาหารที่มีโปรตีนสูง", "ควรพบแพทย์เพื่อติดตามอาการ และทำการตรวจสุขภาพประจำปี", "มีการสะสมของเหลวในช่องเยื่อหุ้มปอด ซึ่งแสดงเป็นเงาที่ผิดปกติในบริเวณขอบปอดล่าง", "ของเหลวมักมีความหนาแน่นสูงกว่าอากาศปกติและสามารถบ่งบอกถึงการติดเชื้อหรือภาวะการอักเสบ", "อาจมีการเปลี่ยนแปลงในเนื้อเยื่อปอดรอบๆ พื้นที่สะสมของเหลวซึ่งบ่งบอกถึงการติดเชื้อหรือการอักเสบ"]
+            },
+            Infiltration: {
+                Questions: ["การตรวจเพิ่มเติมและการยืนยันผล","การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ลักษณะการแทรกซึมที่ AI ตรวจพบคืออย่างไร?",
+                    "การแทรกซึมนี้มีตำแหน่งอยู่ที่ไหนในปอด?",
+                    "มีสัญญาณอื่นๆ ที่บ่งชี้ถึงภาวะหรือโรคอื่นๆ ที่เกี่ยวข้องกับการแทรกซึมนี้หรือไม่?"
+                ],
+                Answers: ["การตรวจเพิ่มเติม ได้แก่ CT scan, Sputum/Blood Culture, Bronchoscopy และ Biopsy เพื่อหาสาเหตุของ lung infiltration. การเลือกตรวจขึ้นอยู่กับลักษณะทางรังสีและอาการ เช่น ติดเชื้อ, วัณโรค, มะเร็ง หรือโรคปอดอื่น ๆ","พักผ่อนให้เพียงพอและหลีกเลี่ยงควันบุหรี่หรือมลพิษ", "รับประทานอาหารที่บำรุงร่างกายและมีวิตามินสูง", "ควรพบแพทย์ทันทีหากมีอาการหายใจลำบากหรือมีไข้",
+                    "การแทรกซึมเป็นการกระจายของเงาหนาแน่นที่ไม่เป็นปกติซึ่งแสดงถึงการสะสมของของเหลวหรือเนื้อเยื่อ",
+                    "มักพบการแทรกซึมในบริเวณปอดล่างหรือปอดกลาง และอาจกระจายออกไปในพื้นที่ใกล้เคียง",
+                    "อาจมีการเปลี่ยนแปลงในรูปทรงของปอดหรือขอบเขตของการแทรกซึมที่บ่งบอกถึงการติดเชื้อหรือโรคเฉพาะ"
+                ]
+            },
+            Mass: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ขนาดและตำแหน่งของก้อนที่ตรวจพบในภาพถ่าย X-ray คืออะไร?",
+                    "ก้อนที่พบมีขอบเขตชัดเจนหรือไม่ และสามารถบ่งบอกถึงลักษณะที่เป็นอักเสบหรือเนื้องอกได้หรือไม่?",
+                    "มีการเปลี่ยนแปลงของเนื้อเยื่อใกล้เคียงกับก้อนที่ตรวจพบหรือไม่?"
+                ],
+                Answers: ["หลีกเลี่ยงการสูบบุหรี่และสารก่อมะเร็งอื่นๆ", "รับประทานอาหารที่มีเส้นใยสูงและรวมถึงผักสด", "ควรพบแพทย์เพื่อติดตามอาการและตรวจสอบก้อนเนื้ออย่างสม่ำเสมอ",
+                    "ก้อนมีขนาดตั้งแต่เล็กไปจนถึงใหญ่ ตั้งแต่ไม่กี่มิลลิเมตรถึงหลายเซนติเมตร และอาจอยู่ในปอดหนึ่งหรือทั้งสองข้าง",
+                    "ก้อนอาจมีขอบที่ไม่เรียบหรือชัดเจน ซึ่งอาจบ่งบอกถึงเนื้องอกหรือการติดเชื้อ",
+                    "อาจมีการเปลี่ยนแปลงเช่นการแทรกซึมหรือการอักเสบรอบๆ ก้อนซึ่งสามารถบ่งบอกถึงการตอบสนองต่อเนื้องอกหรือการติดเชื้อ"
+                ]
+            },
+            Nodule: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ขนาดและลักษณะของโหนดที่พบคืออะไร?",
+                    "มีการเปลี่ยนแปลงของเนื้อเยื่อรอบๆ โหนดหรือไม่?",
+                    "โหนดที่พบมีความเสี่ยงต่อการเป็นมะเร็งหรือไม่?"
+                ],
+                Answers: ["ปฏิบัติตามคำแนะนำของแพทย์เกี่ยวกับการตรวจติดตาม", "รับประทานอาหารที่มีสารต้านอนุมูลอิสระสูง", "ควรพบแพทย์เพื่อตรวจเอกซเรย์หรือ CT Scan ตามคำแนะนำ",
+                    "โหนดมักมีขนาดเล็ก (น้อยกว่า 3 ซม.) และมีขอบที่ชัดเจน",
+                    "อาจไม่มีการเปลี่ยนแปลงที่รุนแรงในเนื้อเยื่อรอบๆ โหนด แต่ควรตรวจสอบหาการอักเสบหรือการติดเชื้อ",
+                    "ขึ้นอยู่กับลักษณะของโหนด แต่โหนดที่มีขนาดเล็กและขอบชัดเจนมักมีความเสี่ยงต่ำกว่า"
+                ]
+            },
+            Pneumonia: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "มีการกระจายของการอักเสบหรือการติดเชื้อในภาพถ่าย X-ray อย่างไร?",
+                    "อาการของผู้ป่วยมีอะไรบ้างที่สนับสนุนการวินิจฉัยนี้?",
+                    "มีการแสดงถึงการติดเชื้อในระบบอื่นๆ ของร่างกายหรือไม่?"
+                ],
+                Answers: ["พักผ่อนอย่างเพียงพอและดื่มน้ำมาก ๆ หลีกเลี่ยงควันบุหรี่และมลพิษ", "รับประทานอาหารอ่อนและอุ่น ๆ ที่เพิ่มสารต้านอนุมูลอิสระและวิตามินซี", "ควรพบแพทย์ทันทีหากมีอาการเลวลงหรือมีไข้สูง, ตามด้วยการพบตามนัดเพื่อติดตามอาการ",
+                    "การอักเสบหรือการติดเชื้อมักแสดงเป็นการแทรกซึมของเงาที่หนาแน่นในพื้นที่เฉพาะ",
+                    "อาการเช่นไอ, หายใจลำบาก, หรือมีไข้สูงสนับสนุนการวินิจฉัยนี้",
+                    "อาจต้องดูประวัติผู้ป่วยหรือตรวจสอบเพิ่มเติมเพื่อหาสาเหตุหรือการติดเชื้อร่วม"
+                ]
+            },
+            Pneumothorax: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงถึงการหดตัวของปอดหรือไม่?",
+                    "มีอากาศหลุดออกจากปอดเข้าไปในช่องเยื่อหุ้มปอดหรือไม่?",
+                    "มีอาการหรือสัญญาณใดบ่งบอกถึง pneumothorax ในผู้ป่วยหรือไม่?"
+                ],
+                Answers: ["หลีกเลี่ยงกิจกรรมที่อาจทำให้ปอดได้รับอันตรายเพิ่มเติม", "รับประทานอาหารที่ค่อนข้างอ่อน เพื่อลดความเครียดต่อระบบทางเดินอาหาร", "พบแพทย์ทันทีหากมีอาการหายใจลำบาก, ตรวจตามนัดเพื่อติดตามอาการ",
+                    "ใช่, มักจะเห็นเป็นพื้นที่ที่มีเงาสว่างโดยไม่มีการแสดงของเส้นปอด",
+                    "ใช่, การหลุดของอากาศอาจทำให้ปอดหดตัวและช่องเยื่อหุ้มปอดมีอากาศมากเกินไป",
+                    "ผู้ป่วยอาจมีอาการหายใจลำบาก, หายใจเร็ว, หรือมีอาการปวดทรวงอกอย่างฉับพลัน"
+                ]
+            },
+            Consolidation: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงการแข็งตัวของเนื้อเยื่อปอดในบริเวณใด?",
+                    "มีลักษณะพิเศษใดที่ช่วยให้ระบุการแข็งตัวของเนื้อเยื่อได้หรือไม่?",
+                    "การแข็งตัวนี้สามารถบ่งบอกถึงการติดเชื้อร้ายแรงได้หรือไม่?"
+                ],
+                Answers: ["ทำการบริหารปอดและหลีกเลี่ยงการสัมผัสกับสารก่อการระคายเคือง", "รับประทานอาหารที่เบา ๆ และมีสารต้านอนุมูลอิสระ", "ควรติดตามพบแพทย์เป็นประจำตามคำแนะนำหรือหากอาการไม่ดีขึ้น",
+                    "มักแสดงในบริเวณปอดล่างหรือเล้าปอด และปรากฏเป็นเงาหนาแน่น",
+                    "ลักษณะเฉพาะได้แก่ เงาที่หนาแน่นและมีขอบเขตที่ชัดเจน ซึ่งบ่งบอกถึงการติดเชื้อหรือการอักเสบ",
+                    "ใช่, การแข็งตัวของเนื้อเยื่อปอดมักเกี่ยวข้องกับการติดเชื้อแบคทีเรียที่รุนแรง ซึ่งต้องได้รับการรักษาทันที"
+                ]
+            },
+            Edema: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงการสะสมของของเหลวในปอดอย่างไร?",
+                    "สามารถระบุสาเหตุของการบวมน้ำได้จากภาพถ่ายหรือไม่?",
+                    "มีการเปลี่ยนแปลงลักษณะของปอดอื่นๆ ที่เกี่ยวข้องกับ edema หรือไม่?"
+                ],
+                Answers: ["ยกส่วนที่บวมสูงขึ้นและใส่ถุงน่องยืดหยุ่น", "ควรรับประทานอาหารที่มีโปรตีนสูงและหลีกเลี่ยงอาหารที่มีเกลือสูง", "พบแพทย์ทุก 3-6 เดือนหรือตามคำแนะนำของแพทย์",
+                    "ปรากฏเป็นเงาหนาแน่นทั่วไปในทั้งสองปอด, โดยเฉพาะในบริเวณปอดล่าง",
+                    "ไม่เสมอไป แต่ภาพถ่ายอาจช่วยบ่งบอกถึงหัวใจล้มเหลวหรือการบล็อกทางเดินเลือด",
+                    "อาจมีการเปลี่ยนแปลงในรูปทรงของหัวใจหรือเส้นเลือดใหญ่ที่บ่งบอกถึงการเพิ่มขึ้นของความดันในหัวใจ"
+                ]
+            },
+            Emphysema: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงลักษณะของการทำลายถุงลมปอดอย่างไร?",
+                    "มีการเปลี่ยนแปลงลักษณะของกระดูกซี่โครงหรือหน้าอกที่บ่งบอกถึง emphysema หรือไม่?",
+                    "ผลกระทบของ emphysema ต่อการหายใจของผู้ป่วยมีอย่างไรบ้าง?"
+                ],
+                Answers: ["หลีกเลี่ยงการสูบบุหรี่และสารที่ก่อให้เกิดมลพิษ", "รับประทานอาหารที่บำรุงปอด มีวิตามิน A, C และ E", "ควรพบแพทย์ตามคำแนะนำหรือหากมีอาการหายใจลำบากเพิ่มขึ้น",
+                    "ปรากฏเป็นพื้นที่ที่มีเงาสว่างโปร่ง, การขาดเงาเส้นเลือด, และโครงสร้างปอดที่ผิดปกติ",
+                    "ใช่, อาจมีการเปลี่ยนแปลงของกระดูกซี่โครงเช่นบาร์เรลเชสต์ (barrel chest)",
+                    "ทำให้การแลกเปลี่ยนอากาศลดลง, ผู้ป่วยมีอาการหายใจลำบากและหายใจออกยาก"
+                ]
+            },
+            Fibrosis: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงการแข็งตัวของเนื้อเยื่อปอดอย่างไร?",
+                    "มีการเปลี่ยนแปลงในปอดหรือกระดูกซี่โครงที่เกี่ยวข้องกับ fibrosis หรือไม่?",
+                    "Fibrosis มีผลต่อการหายใจของผู้ป่วยอย่างไร?"
+                ],
+                Answers: ["หลีกเลี่ยงควันหรือฝุ่นที่เป็นอันตรายและทำการบริหารปอด", "รับประทานอาหารที่มีสารต้านอนุมูลอิสระสูง", "ควรพบแพทย์เป็นประจำตามคำแนะนำเพื่อติดตามอาการ",
+                    "ปรากฏเป็นเงาหนาแน่นที่แข็งแกร่ง, โครงสร้างเส้นเล็กๆ ที่ผิดปกติ",
+                    "ใช่, อาจมีการดึงหรือบิดเบี้ยวของเนื้อเยื่อปอดและการเปลี่ยนแปลงของรูปทรงปอด",
+                    "ทำให้ปอดแข็งและไม่ยืดหยุ่น, ผู้ป่วยจะมีอาการหายใจลำบากและมีประสิทธิภาพการแลกเปลี่ยนอากาศลดลง"
+                ]
+            },
+            Pleural_Thickening: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงการหนาตัวของเยื่อหุ้มปอดอย่างไร?",
+                    "มีการเปลี่ยนแปลงของรูปทรงหรือการวางตำแหน่งของปอดที่บ่งบอกถึงการหนาตัวของเยื่อหุ้มปอดหรือไม่?",
+                    "การหนาตัวของเยื่อหุ้มปอดมีผลต่อการหายใจของผู้ป่วยอย่างไร?"
+                ],
+                Answers: ["หลีกเลี่ยงการสัมผัสกับสารอันตรายและทำการบริหารปอด", "รับประทานอาหารที่บำรุงเยื่อหุ้มปอด มีสารต้านอนุมูลอิสระ", "พบแพทย์ตามนัดเพื่อตรวจเช็คอาการและปรับปรุงแผนการรักษา",
+                    "ปรากฏเป็นเงาหนาแน่นรอบขอบปอด, โดยมีความไม่สม่ำเสมอของเงา",
+                    "ใช่, อาจมีการดึงหรือการเปลี่ยนแปลงของตำแหน่งของปอด",
+                    "ทำให้การขยายตัวของปอดลดลงและผู้ป่วยอาจมีอาการหายใจลำบาก"
+                ]
+            },
+            Hernia: {
+                Questions: ["การดูแลตัวเอง", "อาหารการกิน", "การพบแพทย์",
+                    "ภาพถ่าย X-ray แสดงการยื่นของอวัยวะหรือเนื้อเยื่อผ่านผนังหรือโครงสร้างที่อ่อนแออย่างไร?",
+                    "มีสัญญาณของการกดทับหรือการบีบอัดอวัยวะใกล้เคียงจากการเกิด hernia หรือไม่?",
+                    "Hernia ที่ตรวจพบมีความเสี่ยงต่อการขาดเลือดหรือการติดเชื้อหรือไม่?"
+                ],
+                Answers: ["หลีกเลี่ยงการยกของหนักและการออกกำลังกายที่ทำให้ความดันในช่องท้องเพิ่มขึ้น", "หลีกเลี่ยงอาหารที่ทำให้เกิดแก๊สหรือท้องอืด", "ควรพบแพทย์เพื่อประเมินสภาพและพิจารณาการผ่าตัดถ้าจำเป็น",
+                    "ปรากฏเป็นเงาที่ผิดปกติในบริเวณที่ไม่ควรมีเนื้อเยื่อหรืออวัยวะ เช่น ในช่องท้องหรือช่องอก",
+                    "อาจมีการเปลี่ยนแปลงของตำแหน่งหรือการบีบอัดของอวัยวะใกล้เคียงที่แสดงในภาพถ่าย",
+                    "ใช่, hernia ที่ใหญ่หรือมีการบีบอัดอาจทำให้อวัยวะขาดเลือดและมีความเสี่ยงต่อการติดเชื้อสูง"
+                ]
+            }
+        };
+        let showingProcessed = false;
+        let uploadedImageSrc = ''; // Store the uploaded image source
+        let specificImageSrc = ''; // Path to the specific image
+
+        
+        function previewImage() {
+            var reader = new FileReader();
+            var file = document.getElementById('xray-input').files[0];
+            uploadedFileName = file.name;
+            reader.onload = function(e) {
+                uploadedImageSrc = e.target.result; // Save the uploaded image source
+                specificImageSrc = `/demo/output_${uploadedFileName}`;
+                document.getElementById('image-preview').innerHTML = '<img src="' + uploadedImageSrc + '" />';
+                showingProcessed = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+    function uploadImage() {
+        var file = document.getElementById("xray-input").files[0];
+        var resultContainer = document.getElementById("result");
+
+        if (!file) {
+            alert("Please select an image first!");
+            return;
+        }
+
+        // จำลองการอัปโหลด
+        setTimeout(function () {
+            resultContainer.innerHTML = `<p>Diagnosis result will be displayed here after processing...</p>`;
+        }, 1000);
+    }
+
+    function toggleImage() {
+            const imagePreview = document.getElementById('image-preview');
+            
+            if (showingProcessed) {
+                // Switch to the uploaded image
+                if (uploadedImageSrc) {
+                    imagePreview.innerHTML = '<img src="' + uploadedImageSrc + '" />';
+                } else {
+                    alert('No image uploaded yet!');
+                }
+                showingProcessed = false;
+            } else {
+                // Switch to the specific image
+                specificImageSrc = `/demo/output_${uploadedFileName}`;
+                imagePreview.innerHTML = '<img src="' + specificImageSrc + '" />';
+                showingProcessed = true;
+            }
+        }
+
+
+        const handleUpload = async (file) => {
+            const fileName = file.name;
+            const payload = { filename: fileName };
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)  // Send JSON with only file name
+                });
+
+                if (response.ok) {
+                    const result = await response.json();  // Parse JSON response
+
+                    // Access the message and predictions from the response
+                    const message = result.message;
+                    const predictions = result.predictions;
+
+                    console.log("Response Message:", message);
+                    console.log("Predictions:", predictions);
+                    const diagnosisResult = document.getElementById('result');
+                    diagnosisResult.innerHTML = `Predicted Disease: <br>${predictions.replace(/\n/g, '<br>')}`;
+
+                } else {
+                    console.error("Error with the response:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        };
+        function handleCondition() {
+            const userInput = document.getElementById('userInput').value.trim().toLowerCase();
+            const responseDiv = document.getElementById('response');
+
+            if (!userInput) {
+                responseDiv.textContent = 'Please type a condition name.';
+                return;
+            }
+
+            const conditionInfo = conditions[Object.keys(conditions).find(key => key.toLowerCase() === userInput)];
+            if (conditionInfo) {
+                responseDiv.innerHTML = `
+                    <div>Please type a question about: <strong>${userInput}</strong></div>
+                    <input type="text" id="questionInput" placeholder="Type your question...">
+                    <button onclick="matchQuestion('${Object.keys(conditions).find(key => key.toLowerCase() === userInput)}')">Submit Question</button>
+                `;
+            } else {
+                responseDiv.textContent = 'Condition not found. Try again.';
+            }
+        }
+
+        function matchQuestion(condition) {
+            const questionInput = document.getElementById('questionInput').value.trim();
+            const responseDiv = document.getElementById('response');
+
+            if (!questionInput) {
+                responseDiv.textContent = 'Please type your question.';
+                return;
+            }
+
+            const questions = conditions[condition].Questions;
+            const answers = conditions[condition].Answers;
+
+            for (let i = 0; i < questions.length; i++) {
+                if (questions[i].trim().toLowerCase() === questionInput.trim().toLowerCase()) {
+                    responseDiv.innerHTML = `<div><strong>Answer:</strong> ${answers[i]}</div>`;
+                    return;
+                }
+            }
+
+            responseDiv.textContent = 'Question not found. Please try again.';
+        }
+
+
+        // Example: Trigger function on file input change
+        document.getElementById("xray-input").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                handleUpload(file);
+            }
+        });
+
+    </script>
+</body>
+
+</html>

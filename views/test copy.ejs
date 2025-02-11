@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Assist Chest Radiology System</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f4f4f4, #e0e0e0);
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0056b3, #004494);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 600;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 50%;
+            margin: auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .image-section, .diagnosis-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex: 1;
+        }
+
+        .image-section:hover, .diagnosis-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-preview {
+            height: 450px; /* Increased height for larger display */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 450px;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #0056b3;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #0056b3, #004494);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #004494, #003375);
+            transform: scale(1.05);
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px 0;
+            background: #333;
+            color: white;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+            padding: 15px 20px;
+            border: 3px solid #0056b3;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #00C851;
+            color: white;
+            transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        input[type="file"]:hover {
+            background-color: #007E33;
+            transform: scale(1.05);
+            border-color: #004494;
+        }
+
+        .toggle-button {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .cropped-image {
+          width: 288px;  /* Increase size */
+          height: 400px;
+          object-fit: contain; /* Scales without cropping */
+          background-color: black; /* Fills empty space */
+        }
+
+        @media (max-width: 768px) {
+            .result-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to AI-Assist Chest Radiology System</h1>
+    </header>
+    <main>
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload X-ray Image</h2>
+            <div class="upload-container">
+                <input type="file" id="xray-input" accept="image/*" onchange="previewImage();">
+                <button onclick="uploadImage()">Upload Image</button>
+            </div>
+        </div>
+
+        <!-- Display Section -->
+        <div class="result-container">
+            <div class="image-section">
+                <h2>Image View</h2>
+                <div id="image-preview" class="image-preview"></div>
+                <div class="toggle-button">
+                    <button onclick="toggleImage()">Toggle Image</button>
+                </div>
+            </div>
+            <div class="diagnosis-section">
+                <h2>Diagnosis Result</h2>
+                <div id="result">Please upload an image to see results.</div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>Team I-Tech</p>
+    </footer>
+    <script>
+        let showingProcessed = false;
+        let uploadedImageSrc = ''; // Store the uploaded image source
+        let specificImageSrc = ''; // Path to the specific image
+
+        function uploadImage() {
+    var input = document.getElementById('xray-input');
+    var file = input.files[0];
+    var formData = new FormData();
+    formData.append('image', file);
+
+    // Simulate a server response with predefined percentages
+    const simulatedResponse = {
+        disease: "Atelectasis: 68.60%\nCardiomegaly: 51.78%\nEffusion: 56.72%"
+    };
+
+    // แปลง \n เป็น <br> ในข้อความ
+    const formattedDisease = simulatedResponse.disease.replace(/\n/g, '<br>');
+
+    // Simulate the fetch call with a delay to mimic network latency
+    setTimeout(() => {
+        document.getElementById('result').innerHTML = 'Predicted Disease: <br>' + predictions;
+        document.getElementById('image-preview').innerHTML = '<img src="/00000013_005.png" />';  // update image preview
+        showingProcessed = true;
+    }, 1000); // 1 second delay to simulate network latency
+        }
+
+        function previewImage() {
+            var reader = new FileReader();
+            var file = document.getElementById('xray-input').files[0];
+            uploadedFileName = file.name;
+            reader.onload = function(e) {
+                uploadedImageSrc = e.target.result; // Save the uploaded image source
+                specificImageSrc = `/demo/output_${uploadedFileName}`;
+                document.getElementById('image-preview').innerHTML = '<img src="' + uploadedImageSrc + '" />';
+                showingProcessed = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleImage() {
+            const imagePreview = document.getElementById('image-preview');
+            
+            if (showingProcessed) {
+                // Switch to the uploaded image
+                if (uploadedImageSrc) {
+                    imagePreview.innerHTML = '<img src="' + uploadedImageSrc + '" />';
+                } else {
+                    alert('No image uploaded yet!');
+                }
+                showingProcessed = false;
+            } else {
+                // Switch to the specific image
+                specificImageSrc = `/demo/output_${uploadedFileName}`;
+                imagePreview.innerHTML = '<img src="' + specificImageSrc + '" />';
+                showingProcessed = true;
+            }
+        }
+        const handleUpload = async (file) => {
+            const fileName = file.name;
+            const payload = { filename: fileName };
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+            const response = await fetch("http://127.0.0.1:5000/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)  // Send JSON with only file name
+            });
+            
+            if (response.ok) {
+                const result = await response.json();  // Parse JSON response
+                
+                // Access the message and predictions from the response
+                const message = result.message;
+                const predictions = result.predictions;
+                
+                console.log("Response Message:", message);
+                console.log("Predictions:", predictions);
+                const diagnosisResult = document.getElementById('result');
+                diagnosisResult.innerHTML = `Predicted Disease: <br>${predictions.replace(/\n/g, '<br>')}`;
+                
+            } else {
+                console.error("Error with the response:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    };
+
+        
+// Example: Trigger function on file input change
+document.getElementById("xray-input").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        handleUpload(file);
+    }
+});
+
+    </script>
+</body>
+</html>
